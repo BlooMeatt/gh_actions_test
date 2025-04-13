@@ -5,31 +5,33 @@ on:
     branches:
       - main
     paths:
-      - 'compose.yml' # Триггер при изменении compose файла
-      - '.env' # Триггер при изменении .env
-  workflow_dispatch: # Для ручного запуска
+      - 'docker-compose.yml'
+      - '.env'
+  workflow_dispatch:
 
 jobs:
   deploy-nginx:
-    runs-on: self-hosted # Твой self-hosted раннер
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Stop and remove existing container
         run: |
-          docker-compose down || true # Останавливаем и удаляем, игнорируя ошибки, если контейнера нет
+          docker-compose down
+        continue-on-error: true # Игнорируем ошибки, если контейнер не существует
 
       - name: Deploy Nginx with Docker Compose
         run: |
-          docker-compose up -d # Запускаем контейнер в detached mode
+          docker-compose up -d
 
       - name: Verify Nginx is running
         run: |
-          sleep 5 # Даем время на запуск
-          if curl -s http://localhost:8080 | grep -q "Welcome to nginx"; then
-            echo "Nginx is running correctly!"
-          else
-            echo "Nginx failed to respond"
+          Start-Sleep -Seconds 5 # Ждем 5 секунд для запуска (PowerShell синтаксис)
+          $response = Invoke-WebRequest -Uri http://localhost:8080 -UseBasicParsing
+          if ($response.Content -match "Welcome to nginx") {
+            Write-Output "Nginx is running correctly!"
+          } else {
+            Write-Output "Nginx failed to respond"
             exit 1
-          fi
+          }
