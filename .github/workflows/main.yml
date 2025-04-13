@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Pull image from registry
+        run: docker compose pull
 
       - name: Stop and remove existing container
         run: |
@@ -35,3 +38,5 @@ jobs:
             Write-Output "Nginx failed to respond"
             exit 1
           }
+      - name: Prune old images
+        run: docker image prune -af
